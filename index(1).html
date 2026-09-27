@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dexter Mods</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#090b12;color:#fff}
+header{padding:28px 18px;text-align:center;background:linear-gradient(135deg,#111827,#1e293b);border-bottom:1px solid #334155}
+.logo{font-size:30px;font-weight:900}.sub{color:#94a3b8;margin-top:6px}
+.wrap{max-width:950px;margin:auto;padding:20px}.search{width:100%;padding:15px;border-radius:12px;border:1px solid #334155;background:#111827;color:white;font-size:16px;margin-bottom:18px}
+.panel{background:#111827;border:1px solid #263244;border-radius:16px;padding:18px;margin-bottom:20px}
+h2{margin-top:0}.upload{display:grid;gap:10px}.upload input,.upload textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:white}
+button,.download{border:0;border-radius:10px;padding:12px 16px;background:#2563eb;color:white;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+button:hover,.download:hover{background:#1d4ed8}.danger{background:#dc2626}.danger:hover{background:#b91c1c}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px}
+.card{background:#111827;border:1px solid #263244;border-radius:16px;padding:16px}.card h3{margin:0 0 8px}.meta{color:#94a3b8;font-size:13px;margin-bottom:14px;word-break:break-word}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.empty{text-align:center;color:#94a3b8;padding:25px}.notice{font-size:13px;color:#fbbf24;margin-top:8px}
+</style>
+</head>
+<body>
+<header><div class="logo">DEXTER MODS</div><div class="sub">Paneles y archivos para tus juegos</div></header>
+<main class="wrap">
+<input id="search" class="search" placeholder="🔎 Buscar panel o archivo...">
+
+<section class="panel">
+<h2>➕ Subir archivo</h2>
+<div class="upload">
+<input id="name" placeholder="Nombre del panel">
+<textarea id="desc" rows="3" placeholder="Descripción"></textarea>
+<input id="file" type="file">
+<button id="add">Agregar panel</button>
+<div class="notice">Esta primera versión guarda los archivos temporalmente en este navegador. Después podemos conectarla a almacenamiento online para que todos puedan descargarlos.</div>
+</div>
+</section>
+
+<section>
+<h2>📦 Paneles disponibles</h2>
+<div id="grid" class="grid"></div>
+</section>
+</main>
+
+<script>
+const items=[];
+const search=document.getElementById('search');
+const grid=document.getElementById('grid');
+
+function render(){
+ const q=search.value.trim().toLowerCase();
+ grid.innerHTML='';
+ const filtered=items.filter(x=>(x.name+' '+x.desc+' '+x.file.name).toLowerCase().includes(q));
+ if(!filtered.length){grid.innerHTML='<div class="empty">No hay paneles todavía.</div>';return;}
+ filtered.forEach((x,i)=>{
+  const card=document.createElement('article');
+  card.className='card';
+  card.innerHTML=`<h3>${escapeHtml(x.name)}</h3><div class="meta">${escapeHtml(x.desc||'Sin descripción')}<br>📁 ${escapeHtml(x.file.name)} · ${(x.file.size/1024/1024).toFixed(2)} MB</div>`;
+  const actions=document.createElement('div'); actions.className='actions';
+  const a=document.createElement('a'); a.className='download'; a.textContent='⬇️ Descargar'; a.href=URL.createObjectURL(x.file); a.download=x.file.name;
+  const del=document.createElement('button'); del.className='danger'; del.textContent='Eliminar'; del.addEventListener('click',()=>{items.splice(i,1);render();});
+  actions.append(a,del); card.append(actions); grid.append(card);
+ });
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+document.getElementById('add').addEventListener('click',()=>{
+ const name=document.getElementById('name').value.trim();
+ const desc=document.getElementById('desc').value.trim();
+ const file=document.getElementById('file').files[0];
+ if(!name||!file){alert('Pon un nombre y selecciona un archivo.');return;}
+ items.unshift({name,desc,file});
+ document.getElementById('name').value='';document.getElementById('desc').value='';document.getElementById('file').value='';
+ render();
+});
+search.addEventListener('input',render);
+render();
+</script>
+</body>
+</html>
