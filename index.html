@@ -1,77 +1,185 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dexter Mods</title>
-<style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#090b12;color:#fff}
-header{padding:28px 18px;text-align:center;background:linear-gradient(135deg,#111827,#1e293b);border-bottom:1px solid #334155}
-.logo{font-size:30px;font-weight:900}.sub{color:#94a3b8;margin-top:6px}
-.wrap{max-width:950px;margin:auto;padding:20px}.search{width:100%;padding:15px;border-radius:12px;border:1px solid #334155;background:#111827;color:white;font-size:16px;margin-bottom:18px}
-.panel{background:#111827;border:1px solid #263244;border-radius:16px;padding:18px;margin-bottom:20px}
-h2{margin-top:0}.upload{display:grid;gap:10px}.upload input,.upload textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:white}
-button,.download{border:0;border-radius:10px;padding:12px 16px;background:#2563eb;color:white;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
-button:hover,.download:hover{background:#1d4ed8}.danger{background:#dc2626}.danger:hover{background:#b91c1c}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px}
-.card{background:#111827;border:1px solid #263244;border-radius:16px;padding:16px}.card h3{margin:0 0 8px}.meta{color:#94a3b8;font-size:13px;margin-bottom:14px;word-break:break-word}.actions{display:flex;gap:8px;flex-wrap:wrap}
-.empty{text-align:center;color:#94a3b8;padding:25px}.notice{font-size:13px;color:#fbbf24;margin-top:8px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dexter Mods</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #0b0f19; color: #fff; }
+    header { padding: 28px 18px; text-align: center; background: linear-gradient(180deg, #151c2c, #0b0f19); }
+    .logo { font-size: 30px; font-weight: 900; }
+    .sub { color: #94a3b8; margin-top: 5px; }
+    .wrap { max-width: 950px; margin: auto; padding: 20px; }
+    .search { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #263244; background: #111827; color: #fff; margin-bottom: 20px; }
+    .panel { background: #111827; border: 1px solid #263244; border-radius: 16px; padding: 20px; margin-bottom: 25px; }
+    h2 { margin-top: 0; }
+    .upload { display: grid; gap: 10px; }
+    .upload input, .upload textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #263244; background: #0b0f19; color: #fff; }
+    button, .download { border: 0; border-radius: 10px; padding: 12px 16px; background: #2563eb; color: #fff; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
+    button:hover, .download:hover { background: #1d4ed8; }
+    .danger { background: #dc2626; margin-left: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+    .card { background: #111827; border: 1px solid #263244; border-radius: 16px; padding: 15px; }
+    /* Ocultar sección de subir archivo por defecto */
+    #admin-section { display: none; }
+  </style>
 </head>
 <body>
-<header><div class="logo">DEXTER MODS</div><div class="sub">Paneles y archivos para tus juegos</div></header>
-<main class="wrap">
-<input id="search" class="search" placeholder="🔎 Buscar panel o archivo...">
+  <header>
+    <div class="logo">DEXTER MODS</div>
+    <div class="sub">Paneles y archivos para tus juegos</div>
+  </header>
 
-<section class="panel">
-<h2>➕ Subir archivo</h2>
-<div class="upload">
-<input id="name" placeholder="Nombre del panel">
-<textarea id="desc" rows="3" placeholder="Descripción"></textarea>
-<input id="file" type="file">
-<button id="add">Agregar panel</button>
-<div class="notice">Esta primera versión guarda los archivos temporalmente en este navegador. Después podemos conectarla a almacenamiento online para que todos puedan descargarlos.</div>
-</div>
-</section>
+  <main class="wrap">
+    <input id="search" class="search" placeholder="🔍 Buscar panel o archivo..." onkeyup="filtrarPaneles()">
 
-<section>
-<h2>📦 Paneles disponibles</h2>
-<div id="grid" class="grid"></div>
-</section>
-</main>
+    <!-- SECCIÓN SUBIR ARCHIVO (SOLO APARECE SI ENTRAS CON ?admin=1) -->
+    <section id="admin-section" class="panel">
+      <h2>➕ Subir archivo</h2>
+      <div class="upload">
+        <input id="name" placeholder="Nombre del panel">
+        <textarea id="desc" rows="3" placeholder="Descripción"></textarea>
+        <input id="file" type="file">
+        <button id="add" onclick="subirArchivo()">Agregar panel</button>
+      </div>
+    </section>
 
-<script>
-const items=[];
-const search=document.getElementById('search');
-const grid=document.getElementById('grid');
+    <section>
+      <h2>📦 Paneles disponibles</h2>
+      <div id="grid" class="grid">Cargando paneles...</div>
+    </section>
+  </main>
 
-function render(){
- const q=search.value.trim().toLowerCase();
- grid.innerHTML='';
- const filtered=items.filter(x=>(x.name+' '+x.desc+' '+x.file.name).toLowerCase().includes(q));
- if(!filtered.length){grid.innerHTML='<div class="empty">No hay paneles todavía.</div>';return;}
- filtered.forEach((x,i)=>{
-  const card=document.createElement('article');
-  card.className='card';
-  card.innerHTML=`<h3>${escapeHtml(x.name)}</h3><div class="meta">${escapeHtml(x.desc||'Sin descripción')}<br>📁 ${escapeHtml(x.file.name)} · ${(x.file.size/1024/1024).toFixed(2)} MB</div>`;
-  const actions=document.createElement('div'); actions.className='actions';
-  const a=document.createElement('a'); a.className='download'; a.textContent='⬇️ Descargar'; a.href=URL.createObjectURL(x.file); a.download=x.file.name;
-  const del=document.createElement('button'); del.className='danger'; del.textContent='Eliminar'; del.addEventListener('click',()=>{items.splice(i,1);render();});
-  actions.append(a,del); card.append(actions); grid.append(card);
- });
-}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
-document.getElementById('add').addEventListener('click',()=>{
- const name=document.getElementById('name').value.trim();
- const desc=document.getElementById('desc').value.trim();
- const file=document.getElementById('file').files[0];
- if(!name||!file){alert('Pon un nombre y selecciona un archivo.');return;}
- items.unshift({name,desc,file});
- document.getElementById('name').value='';document.getElementById('desc').value='';document.getElementById('file').value='';
- render();
-});
-search.addEventListener('input',render);
-render();
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // ⚠️ REEMPLAZA ESTOS DOS VALORES CON TUS CLAVES DE SUPABASE ⚠️
+    const SUPABASE_URL = https://acjaizzwjhbiakogycjh.supabase.co/rest/v1/;
+    const SUPABASE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjamFpenp3amhiaWFrb2d5Y2poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0OTQ2NjgsImV4cCI6MjEwNjA3MDY2OH0.3GXczl9JvbUrZDnaVBWQDi2OmWYf_QeMf7gJM_vdOhQ;
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Detectar si la URL lleva ?admin=1 al final
+    const urlParams = new URLSearchParams(window.location.search);
+    const esAdmin = urlParams.get('admin') === '1';
+
+    if (esAdmin) {
+      document.getElementById('admin-section').style.display = 'block';
+    }
+
+    // Cargar Paneles desde Supabase
+    async function cargarPaneles() {
+      const { data, error } = await supabase
+        .from('Dexter')
+        .select('*')
+        .order('id', { ascending: false });
+
+      const grid = document.getElementById('grid');
+      grid.innerHTML = "";
+
+      if (error || !data || data.length === 0) {
+        grid.innerHTML = "<p>No hay paneles disponibles por el momento.</p>";
+        return;
+      }
+
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = "card";
+
+        let btnEliminar = esAdmin ? `<button class="danger" onclick="eliminarPanel(${item.id})">Eliminar</button>` : '';
+
+        card.innerHTML = `
+          <h3>${item.Titulo || item.titulo || 'Sin nombre'}</h3>
+          <p>${item.descripcion || ''}</p>
+          <p>📁 <b>${item.nombre_archivo || 'Archivo'}</b> • ${item.peso || ''}</p>
+          <a href="${item.archivo_url}" target="_blank" class="download">⬇ Descargar</a>
+          ${btnEliminar}
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Subir Archivo al Storage 'panels' y guardar registro en la tabla 'Dexter'
+    async function subirArchivo() {
+      const name = document.getElementById('name').value;
+      const desc = document.getElementById('desc').value;
+      const fileInput = document.getElementById('file');
+      const file = fileInput.files[0];
+
+      if (!name || !file) {
+        alert("Por favor escribe un nombre y selecciona un archivo.");
+        return;
+      }
+
+      const btn = document.getElementById('add');
+      btn.innerText = "Subiendo...";
+      btn.disabled = true;
+
+      try {
+        const fileName = `${Date.now()}_${file.name}`;
+
+        // Subir al bucket 'panels'
+        const { error: storageError } = await supabase.storage
+          .from('panels')
+          .upload(fileName, file);
+
+        if (storageError) throw storageError;
+
+        // Obtener la URL pública de descarga
+        const { data: urlData } = supabase.storage
+          .from('panels')
+          .getPublicUrl(fileName);
+
+        const publicUrl = urlData.publicUrl;
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+
+        // Guardar registro en la tabla 'Dexter'
+        const { error: dbError } = await supabase
+          .from('Dexter')
+          .insert([
+            {
+              Titulo: name,
+              descripcion: desc,
+              archivo_url: publicUrl,
+              nombre_archivo: file.name,
+              peso: sizeMb
+            }
+          ]);
+
+        if (dbError) throw dbError;
+
+        alert("¡Panel subido exitosamente!");
+        location.reload();
+
+      } catch (err) {
+        alert("Error al subir archivo: " + err.message);
+        btn.innerText = "Agregar panel";
+        btn.disabled = false;
+      }
+    }
+
+    // Eliminar Panel
+    async function eliminarPanel(id) {
+      if (confirm("¿Seguro que deseas eliminar este panel?")) {
+        const { error } = await supabase.from('Dexter').delete().eq('id', id);
+        if (error) alert("Error al eliminar: " + error.message);
+        else cargarPaneles();
+      }
+    }
+
+    // Buscador
+    function filtrarPaneles() {
+      const input = document.getElementById('search').value.toLowerCase();
+      const cards = document.querySelectorAll('.grid .card');
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(input) ? 'block' : 'none';
+      });
+    }
+
+    // Cargar al iniciar
+    cargarPaneles();
+  </script>
 </body>
 </html>
