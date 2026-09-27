@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEXTER MODS - Panel Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #161b22;
+            padding: 25px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid #30363d;
+        }
+        h2 { text-align: center; margin-bottom: 20px; }
+        label { display: block; margin-top: 10px; font-size: 14px; color: #8b949e; }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            background-color: #0d1117;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #238636;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            border: none;
+        }
+        button:hover { background-color: #2ea043; }
+        .msg { margin-top: 15px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Subir Nuevo Panel</h2>
+    
+    <label for="titulo">Título del Panel/Archivo:</label>
+    <input type="text" id="titulo" placeholder="Ej. Panel VIP Mod" required>
+
+    <label for="descripcion">Descripción:</label>
+    <textarea id="descripcion" rows="3" placeholder="Descripción breve..."></textarea>
+
+    <label for="url">Enlace de descarga:</label>
+    <input type="url" id="url" placeholder="https://..." required>
+
+    <button onclick="guardarPanel()">Publicar Panel</button>
+    
+    <div id="mensaje" class="msg"></div>
+</div>
+
+<script>
+    // ⚠️ Reemplaza estos dos datos con tus claves de Supabase
+    const SUPABASE_URL = https://acjaizzwjhbiakogycjh.supabase.co/rest/v1/;
+    const SUPABASE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjamFpenp3amhiaWFrb2d5Y2poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0OTQ2NjgsImV4cCI6MjEwNjA3MDY2OH0.3GXczl9JvbUrZDnaVBWQDi2OmWYf_QeMf7gJM_vdOhQ;
+    
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function guardarPanel() {
+        const titulo = document.getElementById('titulo').value;
+        const descripcion = document.getElementById('descripcion').value;
+        const url = document.getElementById('url').value;
+        const mensaje = document.getElementById('mensaje');
+
+        if (!titulo || !url) {
+            mensaje.style.color = '#f85149';
+            mensaje.innerText = "Por favor completa el título y la URL.";
+            return;
+        }
+
+        mensaje.style.color = '#e3b341';
+        mensaje.innerText = "Guardando...";
+
+        const { data, error } = await _supabase
+            .from('paneles') // Nombre de tu tabla en Supabase
+            .insert([{ titulo: titulo, descripcion: descripcion, url: url }]);
+
+        if (error) {
+            mensaje.style.color = '#f85149';
+            mensaje.innerText = "Error: " + error.message;
+        } else {
+            mensaje.style.color = '#3fb950';
+            mensaje.innerText = "¡Panel agregado con éxito!";
+            document.getElementById('titulo').value = '';
+            document.getElementById('descripcion').value = '';
+            document.getElementById('url').value = '';
+        }
+    }
+</script>
+
+</body>
+</html>
